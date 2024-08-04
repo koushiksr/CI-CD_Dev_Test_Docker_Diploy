@@ -40,13 +40,6 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/my-app:latest
 
-      - name: Set up SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ec2-3-6-201-69.ap-south-1.compute.amazonaws.com >> ~/.ssh/known_hosts
-
       - name: Test SSH connection
         run: ssh -vvv -i ~/.ssh/id_rsa ubuntu@ec2-3-6-201-69.ap-south-1.compute.amazonaws.com "echo SSH connection successful"
 
