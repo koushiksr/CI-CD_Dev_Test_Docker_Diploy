@@ -38,7 +38,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/my-app:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/my-app:v2
 
       - name: Set up SSH key
         run: |
@@ -52,7 +52,7 @@ jobs:
 
       - name: Pull Docker image on server
         run: |
-          ssh -i ~/.ssh/id_rsa ubuntu@ec2-3-6-201-69.ap-south-1.compute.amazonaws.com "sudo docker pull ${{ secrets.DOCKER_USERNAME }}/my-app:latest"
+          ssh -i ~/.ssh/id_rsa ubuntu@ec2-3-6-201-69.ap-south-1.compute.amazonaws.com "sudo docker pull ${{ secrets.DOCKER_USERNAME }}/my-app:v2"
 
       - name: Stop running Docker container
         run: |
@@ -64,4 +64,4 @@ jobs:
 
       - name: Run new Docker container
         run: |
-          ssh -i ~/.ssh/id_rsa ubuntu@ec2-3-6-201-69.ap-south-1.compute.amazonaws.com "sudo docker run -d --name my-app -p 3000:3000 ${{ secrets.DOCKER_USERNAME }}/my-app:latest"
+          ssh -i ~/.ssh/id_rsa ubuntu@ec2-3-6-201-69.ap-south-1.compute.amazonaws.com "sudo docker run -d --name my-app -p 3000:3000 ${{ secrets.DOCKER_USERNAME }}/my-app:v2"
