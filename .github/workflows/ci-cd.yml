@@ -40,17 +40,44 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/my-app:latest
 
-      - name: Deploy to server
+      - name: Create SSH key file
         env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_USER: ${{ secrets.EC2_USER }}
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
         run: |
           echo "${{ secrets.EC2_SSH_KEY }}" > ec2_key.pem
           chmod 600 ec2_key.pem
-          ssh -i ec2_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
-            docker pull ${{ secrets.DOCKER_USERNAME }}/my-app:latest
-            docker stop my-app || true
-            docker rm my-app || true
-            docker run -d --name my-app -p 3000:3000 ${{ secrets.DOCKER_USERNAME }}/my-app:latest
-          EOF
+
+      - name: Test SSH connection
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |
+          ssh -vvv -i ec2_key.pem -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=60 $EC2_USER@$EC2_HOST "echo SSH connection successful"
+
+      - name: Pull Docker image on server
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |
+          ssh -i ec2_key.pem -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=60 $EC2_USER@$EC2_HOST "docker pull ${{ secrets.DOCKER_USERNAME }}/my-app:latest"
+
+      - name: Stop running Docker container
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |
+          ssh -i ec2_key.pem -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=60 $EC2_USER@$EC2_HOST "docker stop my-app || true"
+
+      - name: Remove stopped Docker container
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |
+          ssh -i ec2_key.pem -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=60 $EC2_USER@$EC2_HOST "docker rm my-app || true"
+
+      - name: Run new Docker container
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |
+          ssh -i ec2_key.pem -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=60 $EC2_USER@$EC2_HOST "docker run -d --name my-app -p 3000:3000 ${{ secrets.DOCKER_USERNAME }}/my-app:latest"
